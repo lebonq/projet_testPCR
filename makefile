@@ -1,4 +1,4 @@
-all:	 TestMessage TestRedirection TestLectureEcriture
+all:	 TestMessage TestRedirection TestLectureEcriture Terminal
 
 message.o: message.c message.h
 	gcc -Wall -c message.c
@@ -18,8 +18,11 @@ lectureEcriture.o: lectureEcriture.c lectureEcriture.h
 TestLectureEcriture: lectureEcriture.o TestLectureEcriture.c
 	gcc lectureEcriture.o TestLectureEcriture.c -o TestLectureEcriture
 
+Terminal: message.o alea.o lectureEcriture.o terminal.c
+	gcc -Wall terminal.c message.o alea.o lectureEcriture.o -o  Terminal
+
 clean:	
 	rm -f *.o *~ 
 
 cleanall: clean
-	rm TestRedirection TestMessage TestLectureEcriture
+	rm TestRedirection TestMessage TestLectureEcriture Terminal
