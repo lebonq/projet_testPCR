@@ -6,6 +6,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ * @brief Methode principal du programme
+ * 
+ * @param argc 
+ * @param argv en 1 le descripteur de fichier de reception, en 2 le descripteur de fichier d'envoie
+ * @return int 
+ */
 int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des réponses et argv[2] c'est ou l'on ecrit les requêtes
     
     if(argc < 3){
@@ -15,43 +22,57 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
 
     printf("Ce terminal ecrira dans le descripteur : %s\nCe terminal lira dans le descripteur : %s\n", argv[2],argv[1]);
 
+    while(1){
+        char *num = malloc(TAILLEBUF+1);
+
+        printf("Veuillez rentrer le numero du test a verifier : \n");
+        fgets(num,17,stdin); //A ameliorer
+
+        validerTest(num,atoi(argv[2]),atoi(argv[1]));
+
+        fflush(stdin);//On nettoye le buffer d'input sinon il reste le \n
+        free(num);
+
+    }
+}
+
+int validerTest(char *numeroTest, int fdEnvoye, int fdRecois){
+    //Generation de la duree de validite
     char valeur[255];
 
     aleainit();
     sprintf(valeur,"%d",alea(1,50000));
 
-    int err = envoyerMessage("1703582648300826", valeur, atoi(argv[2]));
-
+    int err = envoyerMessage(numeroTest, valeur, fdEnvoye);
+    
     if(err == 0){
         printf("Erreur dans l'envoie des messages\n");
-        exit(0);
+        return err;
     }
 
     char *msg = malloc(TAILLEBUF+1);
 
-    err = recevoirMessage(atoi(argv[1]), &msg);
+    err = recevoirMessage(fdRecois, &msg);
 
     if(err == 0){
         printf("Erreur dans l'envoie des messages\n");
-        exit(0);
+        return err;
     }
 
     err = affichageResultat(msg);
 
     if(err == 0){
         printf("Erreur dans le decoupage du message\n");
-        exit(0);
+        return err;
     }
-}
 
-int validerTest(){
-    
+    return 1;
 }
 
 /**
  * @brief Permet d'ecrire un message de demande validation pcr, ici nous permet d'envoyer un message vers d'autre composant
  * 
- * @param numeroTest Le numeros du test PCR
+ * @param numeroTest Le numero du test PCR
  * @param typeMessage 
  * @param fd Le descripteur ou l'on veut ecrire notre message
  * @return int status d'erreur de la fonction

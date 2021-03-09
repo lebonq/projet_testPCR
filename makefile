@@ -21,6 +21,9 @@ TestLectureEcriture: lectureEcriture.o TestLectureEcriture.c
 Terminal: message.o alea.o lectureEcriture.o terminal.c terminal.h
 	gcc -Wall terminal.c message.o alea.o lectureEcriture.o -o  Terminal
 
+CreationDatabase: creationDatabase.c
+	gcc
+
 clean:	
 	rm -f *.o *~ 
 
