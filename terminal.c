@@ -129,3 +129,19 @@ int affichageResultat(char* msg){
 
     return err;
 }
+void enregistrerResultat(char* msg){
+
+    FILE* fichier = NULL;
+    fichier = fopen("testTerminal.txt", "r+");
+
+    if (fichier != NULL)
+    {
+        fprintf(fichier, msg);
+        fclose(fichier);
+    }
+    else
+    {
+        printf("Impossible d'ouvrir le fichier");
+
+    }
+}
