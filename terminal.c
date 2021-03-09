@@ -107,7 +107,7 @@ int recevoirMessage(int fd, char** msg){
 }
 
 /**
- * @brief 
+ * @brief Permet d'afficher le resultat sur la sortie standart
  * 
  * @param msg 
  * @return int 
