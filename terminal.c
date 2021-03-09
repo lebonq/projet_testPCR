@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * @brief Methode principal du programme
@@ -19,20 +20,24 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
         printf("Il manque un descripteur de fichier\n");
         exit(0);
     }
-
+    
     printf("Ce terminal ecrira dans le descripteur : %s\nCe terminal lira dans le descripteur : %s\n", argv[2],argv[1]);
 
+    int argv1 = atoi(argv[1]);
+    int argv2 = atoi(argv[2]);
+
+    char *num = malloc(TAILLEBUF+1);
+
     while(1){
-        char *num = malloc(TAILLEBUF+1);
-
         printf("Veuillez rentrer le numero du test a verifier : \n");
-        fgets(num,17,stdin); //A ameliorer
 
-        validerTest(num,atoi(argv[2]),atoi(argv[1]));
-
-        fflush(stdin);//On nettoye le buffer d'input sinon il reste le \n
-        free(num);
-
+        fgets(num,17,stdin);
+        if(strlen(num) == 17)
+            validerTest(num,argv2,argv1);
+        else
+            printf("Vous n'avez pas rentre un numero valide.\n Veuillez recommencer ");
+        //Permet de vider le buffer d'entree
+        fgets(num,BUFSIZ,stdin); //Sale mais ca fonctionne
     }
 }
 
@@ -120,7 +125,7 @@ int affichageResultat(char* msg){
         return err;
     }
 
-    if(atoi(valeur) == 1){
+    if(atoi(valeur) == 0){
         printf("Le test %s est valide.\n",nmTest);
     }
     else{
