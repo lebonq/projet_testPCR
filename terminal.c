@@ -129,6 +129,7 @@ int affichageResultat(char* msg){
 
     return err;
 }
+
 void enregistrerResultat(char* msg){
 
     FILE* fichier = NULL;
