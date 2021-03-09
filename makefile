@@ -28,4 +28,7 @@ clean:
 	rm -f *.o *~ 
 
 cleanall: clean
-	rm TestRedirection TestMessage TestLectureEcriture Terminal
+	rm TestRedirection TestMessage TestLectureEcriture Terminal CreationDatabase
+
+cleantxt:
+	rm *.txt

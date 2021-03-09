@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 int main(int argc, char **argv){
     
@@ -15,16 +16,29 @@ int main(int argc, char **argv){
 
     sprintf(fileName, "resulats_centre_%s.txt", argv[2]);
 
-    FILE* fd = fopen(fileName,"w");
+    FILE* fd = fopen(fileName,"w");//On cree le fichier
 
-    //char test[255];
-    long unsigned int nbTest = 100000000000;
+    long unsigned int nbTest = 100000000000; //Permet de genere un code aleatoire
+
+    struct timeval tv;
+    gettimeofday(&tv,NULL);//On recupere la date du jour en seconde ecoulee depuis 1970
 
     for(int i = 0; i <= atoi(argv[1]); i++){
         aleainit();
-        nbTest += i*alea(1,150);
+        nbTest += i;//*alea(1,150);
 
-        fprintf(fd, "%s%lu %s %s\n",argv[2], nbTest, fileName, fileName);
+        long int timeTest = tv.tv_sec - alea(14400,345600); //Ici on retire entre 4 et 96 heures a l'heures actuelle pour simuler un prelevement qui a ete fait entre 4 et 96 avant le vol
+
+        int resultatTest = alea(0,100);
+
+        if(resultatTest < 93){ //93% de negatif
+            resultatTest = 0; //negatif
+        }
+        else{ //7% de positif
+            resultatTest = 1;
+        }
+
+        fprintf(fd, "%s%lu %ld %d\n",argv[2], nbTest, timeTest, resultatTest);
     }
 
     fclose(fd);
