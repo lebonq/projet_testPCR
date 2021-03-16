@@ -44,6 +44,14 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
     }
 }
 
+/**
+ * @brief Permet de lancer la procedure de verification du test
+ * 
+ * @param numeroTest 
+ * @param fdEnvoye 
+ * @param fdRecois 
+ * @return int 
+ */
 int validerTest(char *numeroTest, int fdEnvoye, int fdRecois){
     //Generation de la duree de validite
     char valeur[255];
@@ -140,6 +148,11 @@ int affichageResultat(char* msg){
     return err;
 }
 
+/**
+ * @brief Permet de faire les logs de la session du terminal
+ * 
+ * @param msg 
+ */
 void enregistrerResultat(char* msg){
 
     FILE* fichier = NULL;

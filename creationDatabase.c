@@ -14,7 +14,7 @@ int main(int argc, char **argv){
 
     char fileName[255];
 
-    sprintf(fileName, "resulats_centre_%s.txt", argv[2]);
+    sprintf(fileName, "resultats_centre_%s.txt", argv[2]);
 
     FILE* fd = fopen(fileName,"w");//On cree le fichier
 

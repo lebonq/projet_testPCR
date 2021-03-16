@@ -1,4 +1,4 @@
-all:	 TestMessage TestRedirection TestLectureEcriture Terminal CreationDatabase
+all:	 TestMessage TestRedirection TestLectureEcriture Terminal CreationDatabase Validation
 
 message.o: message.c message.h
 	gcc -Wall -c message.c
@@ -20,6 +20,9 @@ TestLectureEcriture: lectureEcriture.o TestLectureEcriture.c
 
 Terminal: message.o alea.o lectureEcriture.o terminal.c terminal.h
 	gcc -Wall terminal.c message.o alea.o lectureEcriture.o -o  Terminal
+
+Validation: message.o lectureEcriture.o validation.c validation.h
+	gcc -Wall validation.c message.o lectureEcriture.o -o  Validation
 
 CreationDatabase: alea.o lectureEcriture.o creationDatabase.c 
 	gcc -Wall creationDatabase.c lectureEcriture.o alea.o  -o CreationDatabase
