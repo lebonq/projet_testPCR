@@ -23,7 +23,7 @@ int main(int argc, char **argv){
     struct timeval tv;
     gettimeofday(&tv,NULL);//On recupere la date du jour en seconde ecoulee depuis 1970
 
-    for(int i = 0; i <= atoi(argv[1]); i++){
+    for(long unsigned int i = 0; i <= atoi(argv[1]); i++){
         aleainit();
         nbTest += i;//*alea(1,150);
 

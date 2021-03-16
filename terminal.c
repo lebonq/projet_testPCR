@@ -35,7 +35,7 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
         if(strlen(num) == 17)
             validerTest(num,argv2,argv1);
         else
-            printf("Vous n'avez pas rentre un numero valide.\n Veuillez recommencer ");
+            printf("Vous n'avez pas rentre un numero valide.\nVeuillez recommencer : \n");
         //Permet de vider le buffer d'entree
         fgets(num,BUFSIZ,stdin); //Sale mais ca fonctionne
     }
@@ -138,7 +138,7 @@ int affichageResultat(char* msg){
 void enregistrerResultat(char* msg){
 
     FILE* fichier = NULL;
-    fichier = fopen("testTerminal.txt", "r+");
+    fichier = fopen("testTerminal.txt", "a");
 
     if (fichier != NULL)
     {
