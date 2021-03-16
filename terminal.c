@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /**
  * @brief Methode principal du programme
@@ -32,10 +33,12 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
         printf("Veuillez rentrer le numero du test a verifier : \n");
 
         fgets(num,17,stdin);
-        if(strlen(num) == 17)
+        printf("%ld",strlen(num));
+        if(strlen(num) == 16)
             validerTest(num,argv2,argv1);
         else
-            printf("Vous n'avez pas rentre un numero valide.\nVeuillez recommencer : \n");
+            printf("Vous n'avez pas rentre un numero valide.\nAppuyez sur entree pour recommencer \n");
+
         //Permet de vider le buffer d'entree
         fgets(num,BUFSIZ,stdin); //Sale mais ca fonctionne
     }
@@ -132,13 +135,17 @@ int affichageResultat(char* msg){
         printf("Le test %s n'est pas valide.\n",nmTest);
     }
 
+    enregistrerResultat(msg);
+
     return err;
 }
 
 void enregistrerResultat(char* msg){
 
     FILE* fichier = NULL;
-    fichier = fopen("testTerminal.txt", "a");
+    char nomFichier[255];
+    sprintf(nomFichier,"log_terminal_%d.txt", getpid());
+    fichier = fopen(nomFichier, "a");
 
     if (fichier != NULL)
     {
