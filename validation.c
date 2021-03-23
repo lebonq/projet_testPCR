@@ -1,3 +1,13 @@
+/**
+ * @file validation.c
+ * @author Quentin LEBON
+ * @brief 
+ * @version 0.1
+ * @date 2021-03-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include "message.h"
 #include "lectureEcriture.h"
 #include "validation.h"
@@ -19,7 +29,7 @@ int main(int argc, char **argv){
 
     int argv1 = atoi(argv[1]); //Lecture
     int argv2 = atoi(argv[2]); //Ecriture
-    char* numCentre = argv[3]; //Ecriture
+    char* numCentre = argv[3]; //Numeros du centre auquel le serveur de validation appartient
 
     char *demande = malloc(TAILLEBUF+1);
 
@@ -44,6 +54,14 @@ int main(int argc, char **argv){
     }
 }
 
+/**
+ * @brief Permet de dire si un test est valide ou non.
+ * 
+ * @param numTest 
+ * @param tempsValiditeTest c'est le temps en seconde pendant lequel le test est valide
+ * @param numCentre 
+ * @return int 
+ */
 int validerTest(char *numTest, char* tempsValiditeTest, char* numCentre){
     char nomFichier[255];
     sprintf(nomFichier,"resultats_centre_%s.txt", numCentre);
@@ -77,6 +95,14 @@ int validerTest(char *numTest, char* tempsValiditeTest, char* numCentre){
     return 1;
 }
 
+/**
+ * @brief Peremt d'envoyer la reponse apres la validation
+ * 
+ * @param numeroTest 
+ * @param resulat 0 si c'est validé sinon 1
+ * @param fd descripteur ou on ecrira la reponse
+ * @return int 
+ */
 int envoyerReponse(char* numeroTest, char* resulat, int fd){
     char *msg = message(numeroTest,"Reponse",resulat);
     int err = ecritLigne(fd, msg);//On l'envoie au descripteur de fichier spécifier lors de demarrage du programme

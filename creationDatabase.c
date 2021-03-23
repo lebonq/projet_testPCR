@@ -1,3 +1,13 @@
+/**
+ * @file creationDatabase.c
+ * @author Quentin LEBON
+ * @brief Permet de creer une fausse base de données pour notre centre d'archivage
+ * @version 0.1
+ * @date 2021-03-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include "lectureEcriture.h"
 #include "alea.h"
 

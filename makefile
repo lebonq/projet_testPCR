@@ -27,11 +27,11 @@ Validation: message.o lectureEcriture.o validation.c validation.h
 CreationDatabase: alea.o lectureEcriture.o creationDatabase.c 
 	gcc -Wall creationDatabase.c lectureEcriture.o alea.o  -o CreationDatabase
 
+Acquisition: acquisition.c acquisition.h
+	gcc -Wall acquisition.c -o Acquisition
+
 clean:	
 	rm -f *.o *~ 
 
 cleanall: clean
-	rm TestRedirection TestMessage TestLectureEcriture Terminal CreationDatabase
-
-cleantxt:
-	rm *.txt
+	rm TestRedirection TestMessage TestLectureEcriture Terminal CreationDatabase Acquisition Validation

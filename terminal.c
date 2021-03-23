@@ -1,3 +1,14 @@
+/**
+ * @file terminal.c
+ * @author Quentin LEBON et Yanis MASSAMBA NAKAVOUA
+ * @brief permet de communiquer avec les centres d'archivage
+ * @version 0.1
+ * @date 2021-03-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+
 #include "terminal.h"
 #include "message.h"
 #include "lectureEcriture.h"
