@@ -1,4 +1,4 @@
-all:	 TestMessage TestRedirection TestLectureEcriture Terminal CreationDatabase Validation
+all:	 TestMessage TestRedirection TestLectureEcriture Terminal CreationDatabase Validation Acquisition
 
 message.o: message.c message.h
 	gcc -Wall -c message.c
@@ -27,7 +27,7 @@ Validation: message.o lectureEcriture.o validation.c validation.h
 CreationDatabase: alea.o lectureEcriture.o creationDatabase.c 
 	gcc -Wall creationDatabase.c lectureEcriture.o alea.o  -o CreationDatabase
 
-Acquisition: acquisition.c acquisition.h
+Acquisition: acquisition.c
 	gcc -Wall acquisition.c -o Acquisition
 
 clean:	

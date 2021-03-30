@@ -44,7 +44,6 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
         printf("Veuillez rentrer le numero du test a verifier : \n");
 
         fgets(num,17,stdin);
-        printf("%ld",strlen(num));
         if(strlen(num) == 16)
             validerTest(num,argv2,argv1);
         else
