@@ -27,8 +27,8 @@ Validation: message.o lectureEcriture.o validation.c validation.h
 CreationDatabase: alea.o lectureEcriture.o creationDatabase.c 
 	gcc -Wall creationDatabase.c lectureEcriture.o alea.o  -o CreationDatabase
 
-Acquisition: acquisition.c
-	gcc -Wall acquisition.c -o Acquisition
+Acquisition: acquisition.c lectureEcriture.o message.o
+	gcc -Wall acquisition.c lectureEcriture.o message.o -o Acquisition
 
 clean:	
 	rm -f *.o *~ 
