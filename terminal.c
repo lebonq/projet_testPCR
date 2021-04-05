@@ -178,6 +178,5 @@ void enregistrerResultat(char* msg){
     else
     {
         printf("Impossible d'ouvrir le fichier");
-
     }
 }
