@@ -18,6 +18,26 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <semaphore.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
+
+
+char** bufferDemande;//Permet de stocker les demandes sous forme de string
+sem_t semBufferDemande;
+int* bufferDescripteur;//Permet de stocker le descripteur de fichier en correspondance avec la demande
+sem_t semBufferDescripteur;
+int* state;//Permet de savoir le statut de la demande associe 
+sem_t semState;
+/*
+ 0 la case est libre
+ 1 la case est occupe 
+*/
+
+char* idCentre;//Pas besoin de semaphore car elle est en read-only
+int nbMaxBufferDemande;//Pas besoin de semaphore car elle est en read-only
 
 int main(int argc, char** argv){
 
@@ -25,64 +45,75 @@ int main(int argc, char** argv){
         printf("Le programme s'utilise avec 2 arguments, ./creationDatabase tailleBuffer idCentre\n");
         exit(0);
     }
-
-    int nbMaxBufferDemande = atoi(argv[1]);
-    char* idCentre = argv[2];//On recupere l'id du centre sous forme de char*
+    nbMaxBufferDemande = atoi(argv[1]);
+    idCentre = argv[2];//On recupere l'id du centre sous forme de char*
 
     if(strlen(idCentre) ==3){//Si il est different de 4 chars ce n;est pas bon !
         printf("Id centre invalide\n");
         exit(0);
     }
 
-    char* bufferDemande[nbMaxBufferDemande];//Permet de stocker les demandes sous forme de string
+    bufferDemande = (char**)malloc(sizeof(char*)*nbMaxBufferDemande);
+    bufferDescripteur = malloc(sizeof(int)*nbMaxBufferDemande);
+    state = malloc(sizeof(int)*nbMaxBufferDemande);
+
     for (int i = 0; i < nbMaxBufferDemande; i++){//On met un malloc dans chaque cases de notre buffer pour stocker nos code
-        bufferDemande[i] = malloc(sizeof(char)*16);//16 chars suffisent car le test fait 16 caraceteres
+        bufferDemande[i] = (char*)malloc(sizeof(char)*16);//16 chars suffisent car le test fait 16 caraceteres
     }
-    
-    int bufferDescripteur[nbMaxBufferDemande];//Permet de stocker le descripteur de fichier en correspondance avec la demande
-    int state[nbMaxBufferDemande];//Permet de savoir le statut de la demande associe 
-    /**
-     * 0 la case est libre
-     * 1 la case est occupe 
-     */
+
     for (int i = 0; i < nbMaxBufferDemande; i++){//On initialise state a 0
         state[i] = 0;
     }
 
-    int fdValider = open("txt_test_acquisition/validation1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
-    int fdInter = open("txt_test_acquisition/inter1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
-    printf("Terminal\n");
-    lireRequeteTerminal(bufferDemande,bufferDescripteur,state,nbMaxBufferDemande,idCentre);
-    printf("Valider\n");
-    threadReceptionReponse(bufferDemande,bufferDescripteur,state,nbMaxBufferDemande,fdValider);
-    printf("Inter Serveur\n");
-    threadReceptionReponse(bufferDemande,bufferDescripteur,state,nbMaxBufferDemande,fdInter);
-
-    return 0;
-}
-
-/**
- * @brief Permet de lire et d'enregister les requestes envoyer par un termial
- * 
- * @param bufferDemande Notre buffer avec les codes de tests
- * @param bufferDescripteur Notre buffers avec les FD correspondant au terminal d'ou vient le code de test
- * @param state Permet de savoir d'ou vient
- * @param nbDemande 
- * @param idCentre Id du centre ou ce situ le serveur d'acquisition
- * @return int 
- */
-int lireRequeteTerminal(char** bufferDemande, int* bufferDescripteur, int* state, int nbDemande,char* idCentre){
     int fdLecteur = open("txt_test_acquisition/terminal1_demande.txt",O_RDONLY);//Descripteur de fichier pour lire les demandes
     int fdEcrivain = open("txt_test_acquisition/terminal1_reponse.txt",O_WRONLY);//Descripteur de fichier pour ecrire les reponses
     int fdValider = open("txt_test_acquisition/validation1_demande.txt",O_WRONLY);//Le tube de validation
     int fdInter = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
+
+    int descripteursTermimal[4] = {fdLecteur,fdEcrivain,fdValider,fdInter};
+
+    int fdValiderListerner= open("txt_test_acquisition/validation1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
+    int fdInterListener = open("txt_test_acquisition/inter1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
+
+    sem_init(&semBufferDemande,0,1);
+    sem_init(&semBufferDescripteur,0,1);
+    sem_init(&semState,0,1);
+
+    pthread_t threadTerminal;
+    pthread_t threadValider;
+    pthread_t threadInter;
+
+    pthread_create(&threadTerminal,NULL,lireRequeteTerminal,descripteursTermimal);
+    pthread_create(&threadValider,NULL,threadReceptionReponse,&fdValiderListerner);
+    pthread_create(&threadInter,NULL,threadReceptionReponse,&fdInterListener);
+
+    printf("Terminal\n");
+    //lireRequeteTerminal(descripteursTermimal);
+    printf("Valider\n");
+    //threadReceptionReponse(&fdValiderListerner);
+    printf("Inter Serveur\n");
+    //threadReceptionReponse(&fdInterListener);
+
+    pthread_join(threadTerminal,NULL);
+    pthread_join(threadValider,NULL);
+    pthread_join(threadInter,NULL);
+
+    return 0;
+}
+
+void *lireRequeteTerminal(void* fdTermimal){
+    int fdLecteur = ((int*)fdTermimal)[0];
+    int fdEcrivain = ((int*)fdTermimal)[1];
+    int fdValider = ((int*)fdTermimal)[2];
+    int fdInter = ((int*)fdTermimal)[3];//
 
     char* c =  litLigne(fdLecteur);
     int i = 0;
     
     char nTest[255],type[255],valeur[255];
 
-    while(c != NULL && i < nbDemande){
+    while(c != NULL && i < nbMaxBufferDemande){
+        sem_wait(&semState);
         if(state[i] == 0){
             state[i] = 1;//On met la case a 1 car elle va etre utilise
             decoupe(c,nTest,type,valeur);
@@ -101,6 +132,7 @@ int lireRequeteTerminal(char** bufferDemande, int* bufferDescripteur, int* state
 
             c =  litLigne(fdLecteur);
         }
+        sem_post(&semState);
         i++;
     }
 
@@ -108,31 +140,24 @@ int lireRequeteTerminal(char** bufferDemande, int* bufferDescripteur, int* state
     return 0;
 }
 
-/**
- * @brief Permet de lire les reponses recu dans le FD, et transmet cette reponse au FD du terminal correspondnant
- * 
- * @param bufferDemande Notre buffer avec les codes de tests
- * @param bufferDescripteur Notre buffers avec les FD correspondant au terminal d'ou vient le code de test
- * @param state Permet de savoir d'ou vient
- * @param nbMaxBufferDemande 
- * @param fdReponse fd ou l;on lit les reponses recus
- * @return int 
- */
-int threadReceptionReponse(char** bufferDemande, int* bufferDescripteur, int* state ,int nbMaxBufferDemande, int fdReponse){
+void *threadReceptionReponse(void* fdReponse){
+    int fdReponseInt = *((int *)fdReponse);
 
     char* bufferReader =  malloc(TAILLEBUF-1);
     char nTest[255],type[255],valeur[255];
 
-    bufferReader = litLigne(fdReponse);//On lit la premiere ligne pour lancer la boucle
+    read(fdReponseInt,bufferReader,TAILLEBUF+1);//On lit la premiere ligne pour lancer la boucle
     while( bufferReader != NULL){
         decoupe(bufferReader,nTest,type,valeur);
         for (int i = 0; i < nbMaxBufferDemande; i++){//On check toute les demandes
+            sem_wait(&semState);
             if(state[i] == 1 && !strcmp(bufferDemande[i],nTest)){//Si la case est pleine on verifi et si le test corespond
                 state[i] = 0;//On libere la case i
-                ecritLigne(bufferDescripteur[i],bufferReader);
+                write(bufferDescripteur[i],bufferReader,TAILLEBUF+1);
             }
+            sem_post(&semState);
         }
-        bufferReader = litLigne(fdReponse);
+        read(fdReponseInt,bufferReader,TAILLEBUF+1);//On utilise read pour etre pipe friendly
     }
     return 0;
 }
