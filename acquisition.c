@@ -70,6 +70,7 @@ int main(int argc, char** argv){
 
     int pipeTerminalAcquisiton[2];
     int pipeAcquisitionTerminal[2];
+ 
     int pipeValidationAcquisition[2];
     int pipeAcquisitonValidation[2];
  
@@ -78,17 +79,24 @@ int main(int argc, char** argv){
     pipe(pipeValidationAcquisition);
     pipe(pipeAcquisitonValidation);
 
-    char fd1[16];
-    char fd2[16];
+    /*for (int i = 0; i < nbTerminal; i++){
+        pipe(pipeTerminalAcquisiton[i]);
+        pipe(pipeAcquisitionTerminal[i]);
+    }*/
 
-    //pid_t terminal = fork();
-    //if(terminal == 0){
-    //   execlp("/usr/bin/xterm", "xterm", "-e", "./Terminal", pipeAcquisitionTerminal[0], pipeTerminalAcquisiton[1], NULL);
-    //}
-
+    pid_t terminal = fork();
+    if(terminal == 0){
+        char fd1[16];
+        char fd2[16];
+        sprintf(fd1,"%d",pipeAcquisitionTerminal[0]);
+        sprintf(fd2,"%d",pipeTerminalAcquisiton[1]);
+        execlp("/usr/bin/xterm", "xterm", "-e", "./Terminal", fd1, fd2, NULL);
+    }
+    printf("%s",nomFichierPcr);
     pid_t validation = fork();
     if(validation == 0){
-        close(pipeAcquisitonValidation[1]);
+        char fd1[16];
+        char fd2[16];
         sprintf(fd1,"%d",pipeAcquisitonValidation[0]);
         sprintf(fd2,"%d",pipeValidationAcquisition[1]);
         execlp("./Validation", "Validation", fd1, fd2, nomFichierPcr, NULL);
@@ -96,8 +104,8 @@ int main(int argc, char** argv){
         exit(0);
     }
 
-    int fdLecteur = open("txt_test_acquisition/terminal1_demande.txt",O_RDONLY);//Descripteur de fichier pour lire les demandes
-    int fdEcrivain = open("txt_test_acquisition/terminal1_reponse.txt",O_WRONLY);//Descripteur de fichier pour ecrire les reponses
+    int fdLecteur = pipeTerminalAcquisiton[0];//Descripteur de fichier pour lire les demandes
+    int fdEcrivain = pipeAcquisitionTerminal[1];//Descripteur de fichier pour ecrire les reponses
     int fdValider = pipeAcquisitonValidation[1];//Le tube de validation
     int fdInter = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
 
@@ -125,19 +133,20 @@ int main(int argc, char** argv){
 }
 
 void *lireRequeteTerminal(void* fdTermimal){
-    int fdLecteur = ((int*)fdTermimal)[0];
-    int fdEcrivain = ((int*)fdTermimal)[1];
-    int fdValider = ((int*)fdTermimal)[2];
-    int fdInter = ((int*)fdTermimal)[3];//
+    int fdLecteur   =    ((int*)fdTermimal)[0];
+    int fdEcrivain  =    ((int*)fdTermimal)[1];
+    int fdValider   =    ((int*)fdTermimal)[2];
+    int fdInter     =    ((int*)fdTermimal)[3];
 
+    printf("Lit premiere ligne\n");
     char* c =  litLigne(fdLecteur);
     int i = 0;
     
     char nTest[255],type[255],valeur[255];
 
     while(c != NULL){
-        sem_wait(&semState);//Permet de ne pas ecrire dans la memoire quand elle est lu
         sem_wait(&nbCaseLibre);
+        sem_wait(&semState);//Permet de ne pas ecrire dans la memoire quand elle est lu
         if(state[i] == 0){
             state[i] = 1;//On met la case a 1 car elle va etre utilise
             decoupe(c,nTest,type,valeur);
@@ -149,15 +158,14 @@ void *lireRequeteTerminal(void* fdTermimal){
             decoupe_str(nTest,demandeId,0,3);//On recupere l'id du centre correspondant au test recu
 
             if(!strcmp(demandeId,idCentre) ){//Si c'est le meme ID on envoye a validation
-                printf("%s\n",c);
                 ecritLigne(fdValider,c);
             }else{//Sinon inter-archive
                 ecritLigne(fdInter,c);
             }
-
-            c =  litLigne(fdLecteur);
+            sem_post(&semState);//On sort de la section critique
+            c =  litLigne(fdLecteur);//On attends un nouvel input
         }
-        sem_post(&semState);
+
         i++;
         if(i > nbMaxBufferDemande){
             i = 0;
@@ -176,15 +184,13 @@ void *threadReceptionReponse(void* fdReponse){
     char nTest[255],type[255],valeur[255];
     bufferReader = litLigne(fdReponseInt);//On lit la premiere ligne pour lancer la boucle
     while( bufferReader != NULL){
-        printf("%s\n",bufferReader);
         decoupe(bufferReader,nTest,type,valeur);
         for (int i = 0; i < nbMaxBufferDemande; i++){//On check toute les demandes
-            sem_wait(&semState);
+            sem_wait(&semState);//on rentre en section critique
             if(state[i] == 1 && !strcmp(bufferDemande[i],nTest)){//Si la case est pleine on verifi et si le test corespond
                 state[i] = 0;//On libere la case i
-                sem_post(&nbCaseLibre);
-                printf("%s\n",bufferReader);
-                ecritLigne(bufferDescripteur[i],bufferReader);
+                sem_post(&nbCaseLibre);//On libere une case dans notre semaphore
+                ecritLigne(bufferDescripteur[i],bufferReader);//On ecrit la ligne dans le descipteur correspondant
             }
             sem_post(&semState);
 

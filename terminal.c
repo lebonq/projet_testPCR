@@ -106,7 +106,7 @@ int validerTest(char *numeroTest, int fdEnvoye, int fdRecois){
 int envoyerMessage(char* numeroTest, char* dureeValidite, int fd){
     char *msg = message(numeroTest,"Demande",dureeValidite); //On cree le char* de notre message pour l'envoyer ensuite
     int err = ecritLigne(fd, msg);//On l'envoie au descripteur de fichier spécifier lors de demarrage du programme
-
+    
     if(err == 0){
         return err;
     }
