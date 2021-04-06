@@ -35,8 +35,8 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
     
     printf("Ce terminal ecrira dans le descripteur : %s\nCe terminal lira dans le descripteur : %s\n", argv[2],argv[1]);
 
-    int argv1 = atoi(argv[1]);
-    int argv2 = atoi(argv[2]);
+    int argv1 = atoi(argv[1]);//Lecture
+    int argv2 = atoi(argv[2]);//Ecriture
 
     char *num = malloc(TAILLEBUF+1);
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
             printf("Vous n'avez pas rentre un numero valide.\nAppuyez sur entree pour recommencer \n");
 
         //Permet de vider le buffer d'entree
-        fgets(num,BUFSIZ,stdin); //Sale mais ca fonctionne
+        fgets(num,BUFSIZ+1,stdin); //Sale mais ca fonctionne
     }
 }
 

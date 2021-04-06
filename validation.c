@@ -19,25 +19,23 @@
 #include <sys/time.h>
 
 int main(int argc, char **argv){
-
     if(argc < 4){
-        printf("Il manque un descripteur de fichier\n");
+        printf("./Validation fdLecture fdEcriture nomFichier\n");
         exit(0);
     }
-    
+    enregistrerResultat("launch\n");
     printf("Ce terminal ecrira dans le descripteur : %s\nCe terminal lira dans le descripteur : %s\n", argv[2],argv[1]);
 
     int argv1 = atoi(argv[1]); //Lecture
     int argv2 = atoi(argv[2]); //Ecriture
-    char* numCentre = argv[3]; //Numeros du centre auquel le serveur de validation appartient
+    char* nomFichier = argv[3]; //Nom du ficher avec les resulatst
 
     char *demande = malloc(TAILLEBUF+1);
-
+    
     while(1){
         char nmTest[255], typeMsg[255], valeur[255]; //ici 255 est une valeur arbitraire
 
         recevoirDemande(&demande,argv1);
-        printf("%s\n", demande);
 
         int err = decoupe(demande,nmTest,typeMsg,valeur);
         if(err == 0){
@@ -46,9 +44,9 @@ int main(int argc, char **argv){
         }
 
         char resValidation[255];
-        int res = validerTest(nmTest,valeur,numCentre); //On converti en char
+        int res = validerTest(nmTest,valeur,nomFichier);
 
-        sprintf(resValidation,"%i", res);
+        sprintf(resValidation,"%i", res); //On converti en char
         envoyerReponse(nmTest,resValidation,argv2);
 
     }
@@ -62,9 +60,7 @@ int main(int argc, char **argv){
  * @param numCentre 
  * @return int 
  */
-int validerTest(char *numTest, char* tempsValiditeTest, char* numCentre){
-    char nomFichier[255];
-    sprintf(nomFichier,"resultats_centre_%s.txt", numCentre);
+int validerTest(char *numTest, char* tempsValiditeTest, char* nomFichier){
 
     FILE* fichier = fopen(nomFichier, "r");
 
@@ -74,17 +70,14 @@ int validerTest(char *numTest, char* tempsValiditeTest, char* numCentre){
 
     while(fscanf(fichier,"%s %s %s",numerosTestFile,datePrelevementFile,resultatFile) != EOF){ // On recupere la ligne
         if(strcmp(numerosTestFile,numTest) == 0){ // on tests si kes 2 numeros sont les memes
-            printf("Match !\n");
             struct timeval tv;
             gettimeofday(&tv,NULL);//On recupere la date du jour en seconde ecoulee depuis 1970
 
             if(atoi(datePrelevementFile) + atoi(tempsValiditeTest) <= tv.tv_sec){
-                printf("time ok\n");
                 fclose(fichier);
                 return atoi(resultatFile);
             }
             else{
-                printf("time not ok\n");
                 fclose(fichier);
                 return 1;
             }
@@ -106,6 +99,7 @@ int validerTest(char *numTest, char* tempsValiditeTest, char* numCentre){
 int envoyerReponse(char* numeroTest, char* resulat, int fd){
     char *msg = message(numeroTest,"Reponse",resulat);
     int err = ecritLigne(fd, msg);//On l'envoie au descripteur de fichier spécifier lors de demarrage du programme
+    enregistrerResultat(msg);
 
     if(err == 0){
         return err;
@@ -124,10 +118,33 @@ int envoyerReponse(char* numeroTest, char* resulat, int fd){
  */
 int recevoirDemande(char** demande,int fd){
     *demande = litLigne(fd);
-
+    enregistrerResultat(*demande);
     if(*demande == NULL){
         return 0;
     }
 
     return 1;
+}
+
+/**
+ * @brief Permet de faire les logs de la session du terminal
+ * 
+ * @param msg 
+ */
+void enregistrerResultat(char* msg){
+
+    FILE* fichier = NULL;
+    char nomFichier[255];
+    sprintf(nomFichier,"/mnt/i/lebon/OneDrive/Documents/Cours/ESIEE_E3/Elective OS/projet_testPCR/log_validat.txt");
+    fichier = fopen(nomFichier, "a");
+
+    if (fichier != NULL)
+    {
+        fprintf(fichier, msg);
+        fclose(fichier);
+    }
+    else
+    {
+        printf("Impossible d'ouvrir le fichier");
+    }
 }
