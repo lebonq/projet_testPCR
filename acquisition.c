@@ -68,31 +68,28 @@ int main(int argc, char** argv){
         state[i] = 0;
     }
 
-    int pipeTerminalAcquisiton[2];
-    int pipeAcquisitionTerminal[2];
+    int pipeTerminalAcquisiton[nbTerminal][2];
+    int pipeAcquisitionTerminal[nbTerminal][2];
  
     int pipeValidationAcquisition[2];
     int pipeAcquisitonValidation[2];
  
-    pipe(pipeTerminalAcquisiton);
-    pipe(pipeAcquisitionTerminal);
     pipe(pipeValidationAcquisition);
     pipe(pipeAcquisitonValidation);
 
-    /*for (int i = 0; i < nbTerminal; i++){
+    for (int i = 0; i < nbTerminal; i++){
         pipe(pipeTerminalAcquisiton[i]);
         pipe(pipeAcquisitionTerminal[i]);
-    }*/
-
-    pid_t terminal = fork();
-    if(terminal == 0){
-        char fd1[16];
-        char fd2[16];
-        sprintf(fd1,"%d",pipeAcquisitionTerminal[0]);
-        sprintf(fd2,"%d",pipeTerminalAcquisiton[1]);
-        execlp("/usr/bin/xterm", "xterm", "-e", "./Terminal", fd1, fd2, NULL);
+        pid_t terminal = fork();
+        if(terminal == 0){
+            char fd1[16];
+            char fd2[16];
+            sprintf(fd1,"%d",pipeAcquisitionTerminal[i][0]);
+            sprintf(fd2,"%d",pipeTerminalAcquisiton[i][1]);
+            execlp("/usr/bin/xterm", "xterm", "-e", "./Terminal", fd1, fd2, NULL);
+        }
     }
-    printf("%s",nomFichierPcr);
+
     pid_t validation = fork();
     if(validation == 0){
         char fd1[16];
@@ -104,28 +101,34 @@ int main(int argc, char** argv){
         exit(0);
     }
 
-    int fdLecteur = pipeTerminalAcquisiton[0];//Descripteur de fichier pour lire les demandes
-    int fdEcrivain = pipeAcquisitionTerminal[1];//Descripteur de fichier pour ecrire les reponses
-    int fdValider = pipeAcquisitonValidation[1];//Le tube de validation
-    int fdInter = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
-
-    int descripteursTermimal[4] = {fdLecteur,fdEcrivain,fdValider,fdInter};
-
     int fdValiderListerner= pipeValidationAcquisition[0];//Descripteur de fichier pour lire les "reponses"
     int fdInterListener = open("txt_test_acquisition/inter1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
 
     sem_init(&semState,0,1);
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
 
-    pthread_t threadTerminal;
+    pthread_t* threadTerminal = malloc(sizeof(pthread_t)*(nbTerminal+1));
     pthread_t threadValider;
     pthread_t threadInter;
 
-    pthread_create(&threadTerminal,NULL,lireRequeteTerminal,descripteursTermimal);
+    for (int i = 0; i < nbTerminal; i++){
+        
+        int fdLecteur = pipeTerminalAcquisiton[i][0];//Descripteur de fichier pour lire les demandes
+        int fdEcrivain = pipeAcquisitionTerminal[i][1];//Descripteur de fichier pour ecrire les reponses
+        int fdValider = pipeAcquisitonValidation[1];//Le tube de validation
+        int fdInter = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
+
+        int descripteursTermimal[4] = {fdLecteur,fdEcrivain,fdValider,fdInter};
+        pthread_create(&threadTerminal[i],NULL,lireRequeteTerminal,descripteursTermimal);
+    }
+    
     pthread_create(&threadValider,NULL,threadReceptionReponse,&fdValiderListerner);
     pthread_create(&threadInter,NULL,threadReceptionReponse,&fdInterListener);
 
-    pthread_join(threadTerminal,NULL);
+    for (int i = 0; i < nbTerminal; i++){
+        pthread_join(threadTerminal[i],NULL);
+    }
+
     pthread_join(threadValider,NULL);
     pthread_join(threadInter,NULL);
 
