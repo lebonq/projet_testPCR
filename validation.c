@@ -39,7 +39,7 @@ int main(int argc, char **argv){
 
         int err = decoupe(demande,nmTest,typeMsg,valeur);
         if(err == 0){
-            printf("Erreur decoupe\n");
+            printf("Erreur decoupe de : %s\n",demande);
             return err;
         }
 

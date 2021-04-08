@@ -70,7 +70,7 @@ int main(int argc, char** argv){
 
     int pipeTerminalAcquisiton[nbTerminal][2];
     int pipeAcquisitionTerminal[nbTerminal][2];
- 
+
     int pipeValidationAcquisition[2];
     int pipeAcquisitonValidation[2];
  
@@ -107,7 +107,7 @@ int main(int argc, char** argv){
     sem_init(&semState,0,1);
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
 
-    pthread_t* threadTerminal = malloc(sizeof(pthread_t)*(nbTerminal+1));
+    pthread_t* threadTerminal = malloc(sizeof(pthread_t)*(nbTerminal));
     pthread_t threadValider;
     pthread_t threadInter;
 
@@ -119,6 +119,7 @@ int main(int argc, char** argv){
         int fdInter = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
 
         int descripteursTermimal[4] = {fdLecteur,fdEcrivain,fdValider,fdInter};
+        printf("%d %d",fdLecteur,fdEcrivain);
         pthread_create(&threadTerminal[i],NULL,lireRequeteTerminal,descripteursTermimal);
     }
     
@@ -141,13 +142,15 @@ void *lireRequeteTerminal(void* fdTermimal){
     int fdValider   =    ((int*)fdTermimal)[2];
     int fdInter     =    ((int*)fdTermimal)[3];
 
-    printf("Lit premiere ligne\n");
+    printf("Lit premiere ligne %d %d\n",fdLecteur,fdEcrivain);
     char* c =  litLigne(fdLecteur);
+    printf("Lu premiere ligne %d\n",fdLecteur);
     int i = 0;
     
     char nTest[255],type[255],valeur[255];
 
     while(c != NULL){
+        printf("Debut tranfert \n");
         sem_wait(&nbCaseLibre);
         sem_wait(&semState);//Permet de ne pas ecrire dans la memoire quand elle est lu
         if(state[i] == 0){
@@ -161,6 +164,7 @@ void *lireRequeteTerminal(void* fdTermimal){
             decoupe_str(nTest,demandeId,0,3);//On recupere l'id du centre correspondant au test recu
 
             if(!strcmp(demandeId,idCentre) ){//Si c'est le meme ID on envoye a validation
+                printf("Envoye a validation\n");
                 ecritLigne(fdValider,c);
             }else{//Sinon inter-archive
                 ecritLigne(fdInter,c);
