@@ -56,9 +56,9 @@ int main(int argc, char** argv){
         exit(0);
     }
 
-    bufferDemande = (char**)malloc(sizeof(char*)*nbMaxBufferDemande);
-    bufferDescripteur = malloc(sizeof(int)*nbMaxBufferDemande);
-    state = malloc(sizeof(int)*nbMaxBufferDemande);
+    bufferDemande = (char**)malloc(sizeof(char*)*(nbMaxBufferDemande));
+    bufferDescripteur = malloc(sizeof(int)*(nbMaxBufferDemande));
+    state = malloc(sizeof(int)*(nbMaxBufferDemande));
 
     for (int i = 0; i < nbMaxBufferDemande; i++){//On met un malloc dans chaque cases de notre buffer pour stocker nos code
         bufferDemande[i] = (char*)malloc(sizeof(char)*16);//16 chars suffisent car le test fait 16 caraceteres
@@ -107,21 +107,20 @@ int main(int argc, char** argv){
     sem_init(&semState,0,1);
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
 
-    pthread_t* threadTerminal = malloc(sizeof(pthread_t)*(nbTerminal));//Un tableau qui contient tout nos threads terminaux
+    pthread_t* threadTerminal = (pthread_t*)malloc(sizeof(pthread_t)*(nbTerminal));//Un tableau qui contient tout nos threads terminaux
     pthread_t threadValider;
     pthread_t threadInter;
 
-    int** descripteursTermimal = malloc(sizeof(int*)*4);//On fait un tableau qui contiendra les 4 descripteurs pour chacun de nos trheads
+    int** descripteursTermimal = (int**)malloc(sizeof(int*) * (nbTerminal));//On fait un tableau qui contiendra les 4 descripteurs pour chacun de nos trheads
 
     for (int i = 0; i < nbTerminal; i++){
-        
+        descripteursTermimal[i] = (int*)malloc(sizeof(int)*4);
         descripteursTermimal[i][0] = pipeTerminalAcquisiton[i][0];//Descripteur de fichier pour lire les demandes des terminaux
         descripteursTermimal[i][1] = pipeAcquisitionTerminal[i][1];//Descripteur de fichier pour ecrire les reponses dans les terminaux
         descripteursTermimal[i][2] = pipeAcquisitonValidation[1];//Le tube de validation
         descripteursTermimal[i][3]  = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
 
-        printf("%d %d",fdLecteur,fdEcrivain);
-        pthread_create(&threadTerminal[i],NULL,lireRequeteTerminal,descripteursTermimal);
+        pthread_create(&threadTerminal[i],NULL,lireRequeteTerminal,descripteursTermimal[i]);
     }
     
     pthread_create(&threadValider,NULL,threadReceptionReponse,&fdValiderListerner);
@@ -143,15 +142,12 @@ void *lireRequeteTerminal(void* fdTermimal){
     int fdValider   =    ((int*)fdTermimal)[2];
     int fdInter     =    ((int*)fdTermimal)[3];
 
-    printf("Lit premiere ligne %d %d\n",fdLecteur,fdEcrivain);
     char* c =  litLigne(fdLecteur);
-    printf("Lu premiere ligne %d\n",fdLecteur);
     int i = 0;
     
     char nTest[255],type[255],valeur[255];
 
     while(c != NULL){
-        printf("Debut tranfert \n");
         sem_wait(&nbCaseLibre);
         sem_wait(&semState);//Permet de ne pas ecrire dans la memoire quand elle est lu
         if(state[i] == 0){
@@ -165,10 +161,11 @@ void *lireRequeteTerminal(void* fdTermimal){
             decoupe_str(nTest,demandeId,0,3);//On recupere l'id du centre correspondant au test recu
 
             if(!strcmp(demandeId,idCentre) ){//Si c'est le meme ID on envoye a validation
-                printf("Envoye a validation\n");
+                printf("Transfert a validation\n");
                 ecritLigne(fdValider,c);
             }else{//Sinon inter-archive
-                ecritLigne(fdInter,c);
+                printf("Transfert a inter archive\n");
+                ecritLigne(fdInter,c);//dans cette version sans inter archive comme reel processus le programme se bloque dans la section critique
             }
             sem_post(&semState);//On sort de la section critique
             c =  litLigne(fdLecteur);//On attends un nouvel input
