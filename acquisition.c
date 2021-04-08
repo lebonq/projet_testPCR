@@ -67,7 +67,7 @@ int main(int argc, char** argv){
     for (int i = 0; i < nbMaxBufferDemande; i++){//On initialise state a 0
         state[i] = 0;
     }
-
+    //les tableaux qui contiendrons nos pipes
     int pipeTerminalAcquisiton[nbTerminal][2];
     int pipeAcquisitionTerminal[nbTerminal][2];
 
@@ -107,18 +107,19 @@ int main(int argc, char** argv){
     sem_init(&semState,0,1);
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
 
-    pthread_t* threadTerminal = malloc(sizeof(pthread_t)*(nbTerminal));
+    pthread_t* threadTerminal = malloc(sizeof(pthread_t)*(nbTerminal));//Un tableau qui contient tout nos threads terminaux
     pthread_t threadValider;
     pthread_t threadInter;
 
+    int** descripteursTermimal = malloc(sizeof(int*)*4);//On fait un tableau qui contiendra les 4 descripteurs pour chacun de nos trheads
+
     for (int i = 0; i < nbTerminal; i++){
         
-        int fdLecteur = pipeTerminalAcquisiton[i][0];//Descripteur de fichier pour lire les demandes
-        int fdEcrivain = pipeAcquisitionTerminal[i][1];//Descripteur de fichier pour ecrire les reponses
-        int fdValider = pipeAcquisitonValidation[1];//Le tube de validation
-        int fdInter = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
+        descripteursTermimal[i][0] = pipeTerminalAcquisiton[i][0];//Descripteur de fichier pour lire les demandes des terminaux
+        descripteursTermimal[i][1] = pipeAcquisitionTerminal[i][1];//Descripteur de fichier pour ecrire les reponses dans les terminaux
+        descripteursTermimal[i][2] = pipeAcquisitonValidation[1];//Le tube de validation
+        descripteursTermimal[i][3]  = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
 
-        int descripteursTermimal[4] = {fdLecteur,fdEcrivain,fdValider,fdInter};
         printf("%d %d",fdLecteur,fdEcrivain);
         pthread_create(&threadTerminal[i],NULL,lireRequeteTerminal,descripteursTermimal);
     }
