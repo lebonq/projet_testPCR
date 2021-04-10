@@ -1,4 +1,4 @@
-all:	 TestMessage TestRedirection TestLectureEcriture Terminal CreationDatabase Validation Acquisition
+all:	 TestMessage TestRedirection TestLectureEcriture Terminal CreationDatabase Validation Acquisition InterArchive
 
 message.o: message.c message.h
 	gcc -Wall -c message.c
@@ -29,6 +29,9 @@ CreationDatabase: alea.o lectureEcriture.o creationDatabase.c
 
 Acquisition: acquisition.c lectureEcriture.o message.o
 	gcc -Wall acquisition.c lectureEcriture.o message.o -o Acquisition -pthread
+
+InterArchive: interArchive.c lectureEcriture.o message.o
+	gcc -Wall interArchive.c lectureEcriture.o message.o -o InterArchive -pthread
 
 clean:	
 	rm -f *.o *~ 

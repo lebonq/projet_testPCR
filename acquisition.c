@@ -38,10 +38,20 @@ sem_t nbCaseLibre;//Permet de savoir si il y a de la place dans le buffer
 char* idCentre;//Pas besoin de semaphore car elle est en read-only
 int nbMaxBufferDemande;//Pas besoin de semaphore car elle est en read-only
 
+//les tableaux qui contiendrons nos pipes
+int** pipeTerminalAcquisiton;
+int** pipeAcquisitionTerminal;
+
+int pipeValidationAcquisition[2];
+int pipeAcquisitonValidation[2];
+
+int pipeInterArchiveAcquisiton;//lecture
+int pipeAcquisitonInterArchive;//Ecriture
+
 int main(int argc, char** argv){
 
-    if(argc < 6){
-        printf("Le programme s'utilise avec 2 arguments, ./Acquisiton tailleBuffer nomCentre idCentre nomFichierTestPcr nbTerminal\n");
+    if(argc < 8){
+        printf("Le programme s'utilise avec 5 arguments, ./Acquisiton tailleBuffer nomCentre idCentre nomFichierTestPcr nbTerminal fdLecteurInterArchive fdEcrivainInterArchive\n");
         exit(0);
     }
 
@@ -50,6 +60,9 @@ int main(int argc, char** argv){
     idCentre = argv[3];//On recupere l'id du centre sous forme de char*
     char* nomFichierPcr = argv[4];
     int nbTerminal = atoi(argv[5]);
+    pipeInterArchiveAcquisiton = atoi(argv[6]);
+    pipeAcquisitonInterArchive = atoi(argv[7]);
+
 
     if(strlen(idCentre) ==3){//Si il est different de 4 chars ce n;est pas bon !
         printf("Id centre invalide\n");
@@ -67,17 +80,17 @@ int main(int argc, char** argv){
     for (int i = 0; i < nbMaxBufferDemande; i++){//On initialise state a 0
         state[i] = 0;
     }
-    //les tableaux qui contiendrons nos pipes
-    int pipeTerminalAcquisiton[nbTerminal][2];
-    int pipeAcquisitionTerminal[nbTerminal][2];
 
-    int pipeValidationAcquisition[2];
-    int pipeAcquisitonValidation[2];
+    pipeTerminalAcquisiton = (int**)malloc(sizeof(int*)*(nbTerminal));
+    pipeAcquisitionTerminal = (int**)malloc(sizeof(int*)*(nbTerminal));
  
     pipe(pipeValidationAcquisition);
     pipe(pipeAcquisitonValidation);
 
     for (int i = 0; i < nbTerminal; i++){
+        pipeTerminalAcquisiton[i] = (int*)malloc(sizeof(int)*(nbTerminal));
+        pipeAcquisitionTerminal[i] = (int*)malloc(sizeof(int)*(nbTerminal));
+        
         pipe(pipeTerminalAcquisiton[i]);
         pipe(pipeAcquisitionTerminal[i]);
         pid_t terminal = fork();
@@ -203,6 +216,48 @@ void *threadReceptionReponse(void* fdReponse){
         bufferReader = litLigne(fdReponseInt);
     }
     printf("Fin thread validation/inter\n");
+    pthread_exit(NULL);
+}
+
+void *threadInterArchive(void* unUse){
+
+    char* bufferReader =  malloc(TAILLEBUF-1);
+    char nTest[255],type[255],valeur[255];
+    bufferReader = litLigne(pipeInterArchiveAcquisiton);//On lit la premiere ligne pour lancer la boucle
+    while( bufferReader != NULL){
+        decoupe(bufferReader,nTest,type,valeur);
+        if(strcmp(type,"Demande")){//on regarde si le message recu est une reponse ou une demande
+            sem_wait(&nbCaseLibre);
+            sem_wait(&semState);//Permet de ne pas ecrire dans la memoire quand elle est lu
+
+            for (int i = 0; i < nbMaxBufferDemande; i++){//On check toute les demandes
+                if(state[i] == 0){
+                    state[i] = 1;
+                    strcpy(bufferDemande[i],nTest);//on met le test dans le tableau on utilise STRCPY pour ne pas ecraser le pointeur
+                    bufferDescripteur[i] = pipeAcquisitonInterArchive;//On met le fd correspondant
+                    printf("Transfert a validation\n");
+                    ecritLigne(pipeAcquisitonValidation[1],bufferReader);
+                }
+            }
+
+            sem_post(&semState);
+        }
+        else{//ici reponse donc on transmet le message au terminal
+
+            for (int i = 0; i < nbMaxBufferDemande; i++){//On check toute les demandes
+                sem_wait(&semState);//on rentre en section critique
+                if(state[i] == 1 && !strcmp(bufferDemande[i],nTest)){//Si la case est pleine on verifi et si le test corespond
+                    state[i] = 0;//On libere la case i
+                    sem_post(&nbCaseLibre);//On libere une case dans notre semaphore
+                    ecritLigne(bufferDescripteur[i],bufferReader);//On ecrit la ligne dans le descipteur correspondant
+                }
+                sem_post(&semState);
+            }
+        }
+
+        bufferReader = litLigne(pipeInterArchiveAcquisiton);
+    }
+
     pthread_exit(NULL);
 }
 
