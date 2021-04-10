@@ -9,5 +9,6 @@
  * 
  */
 void *lireRequeteTerminal(void* fdTermimal);
-void *threadReceptionReponse(void* fdReponse);
+void *threadValidation(void* fdReponse);
+void *threadInterArchive(void* unUse);
 void decoupe_str(char* input, char * output, int start, int end);

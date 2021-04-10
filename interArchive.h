@@ -8,3 +8,5 @@
  * @copyright Copyright (c) 2021
  * 
  */
+void* threadInter(void* fd);
+void decoupe_str(char* input, char * output, int start, int end);

@@ -60,9 +60,8 @@ int main(int argc, char** argv){
     idCentre = argv[3];//On recupere l'id du centre sous forme de char*
     char* nomFichierPcr = argv[4];
     int nbTerminal = atoi(argv[5]);
-    pipeInterArchiveAcquisiton = atoi(argv[6]);
-    pipeAcquisitonInterArchive = atoi(argv[7]);
-
+    pipeInterArchiveAcquisiton = atoi(argv[6]);//pour les lire ce que interarchive nous envoye
+    pipeAcquisitonInterArchive = atoi(argv[7]);//Pour ecrire
 
     if(strlen(idCentre) ==3){//Si il est different de 4 chars ce n;est pas bon !
         printf("Id centre invalide\n");
@@ -88,8 +87,8 @@ int main(int argc, char** argv){
     pipe(pipeAcquisitonValidation);
 
     for (int i = 0; i < nbTerminal; i++){
-        pipeTerminalAcquisiton[i] = (int*)malloc(sizeof(int)*(nbTerminal));
-        pipeAcquisitionTerminal[i] = (int*)malloc(sizeof(int)*(nbTerminal));
+        pipeTerminalAcquisiton[i] = (int*)malloc(sizeof(int)*(2));
+        pipeAcquisitionTerminal[i] = (int*)malloc(sizeof(int)*(2));
         
         pipe(pipeTerminalAcquisiton[i]);
         pipe(pipeAcquisitionTerminal[i]);
@@ -115,7 +114,7 @@ int main(int argc, char** argv){
     }
 
     int fdValiderListerner= pipeValidationAcquisition[0];//Descripteur de fichier pour lire les "reponses"
-    int fdInterListener = open("txt_test_acquisition/inter1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
+    int fdInterListener = pipeInterArchiveAcquisiton;//Descripteur de fichier pour lire les "reponses"
 
     sem_init(&semState,0,1);
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
@@ -131,13 +130,13 @@ int main(int argc, char** argv){
         descripteursTermimal[i][0] = pipeTerminalAcquisiton[i][0];//Descripteur de fichier pour lire les demandes des terminaux
         descripteursTermimal[i][1] = pipeAcquisitionTerminal[i][1];//Descripteur de fichier pour ecrire les reponses dans les terminaux
         descripteursTermimal[i][2] = pipeAcquisitonValidation[1];//Le tube de validation
-        descripteursTermimal[i][3]  = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
+        descripteursTermimal[i][3]  = pipeAcquisitonInterArchive;//Le tube du serveur inter
 
         pthread_create(&threadTerminal[i],NULL,lireRequeteTerminal,descripteursTermimal[i]);
     }
     
-    pthread_create(&threadValider,NULL,threadReceptionReponse,&fdValiderListerner);
-    pthread_create(&threadInter,NULL,threadReceptionReponse,&fdInterListener);
+    pthread_create(&threadValider,NULL,threadValidation,&fdValiderListerner);
+    pthread_create(&threadInter,NULL,threadInterArchive,&fdInterListener);
 
     for (int i = 0; i < nbTerminal; i++){
         pthread_join(threadTerminal[i],NULL);
@@ -195,7 +194,7 @@ void *lireRequeteTerminal(void* fdTermimal){
     pthread_exit(NULL);
 }
 
-void *threadReceptionReponse(void* fdReponse){
+void *threadValidation(void* fdReponse){
     int fdReponseInt = *((int *)fdReponse);
 
     char* bufferReader =  malloc(TAILLEBUF-1);
