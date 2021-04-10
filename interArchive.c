@@ -36,7 +36,6 @@ sem_t nbCaseLibre;//Permet de savoir si il y a de la place dans le buffer
 
 int nbMaxBufferDemande;//Pas besoin de semaphore car elle est en read-only
 char** idCentres;
-int* descripteurCentre;
 int nbServerAcquisition;
 
 //les tableaux qui contiendrons nos pipes
@@ -50,7 +49,7 @@ int main(int argc,char** argv){
         exit(0);
     }
 
-    printf("Demarrage du reseau");
+    printf("Demarrage du reseau\n");
 
     char* fileConfig = argv[1];
     nbServerAcquisition = atoi(argv[2]);
@@ -59,7 +58,7 @@ int main(int argc,char** argv){
     bufferDemande = (char**)malloc(sizeof(char*)*(nbMaxBufferDemande));
     bufferDescripteur = malloc(sizeof(int)*(nbMaxBufferDemande));
     state = malloc(sizeof(int)*(nbMaxBufferDemande));
-    descripteurCentre = malloc(sizeof(int)*(nbMaxBufferDemande));
+    idCentres = (char**)malloc(sizeof(char*)*nbServerAcquisition);
 
     sem_init(&semState,0,1);
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
@@ -71,7 +70,6 @@ int main(int argc,char** argv){
 
     for (int i = 0; i < nbServerAcquisition; i++){
         idCentres[i] = (char*)malloc(sizeof(char)*16);
-        descripteurCentre[i] = 0;
     }
 
     pthread_t* threadAcquisition = (pthread_t*)malloc(sizeof(pthread_t)*(nbServerAcquisition));//Un tableau qui contient tout nos threads acquisitoon
@@ -110,7 +108,7 @@ int main(int argc,char** argv){
         i++;
     }
 
-    for (int i = 0; i < nbServerAcquisition; i++){
+    for ( i = 0; i < nbServerAcquisition; i++){
         pthread_join(threadAcquisition[i],NULL);
     }
     
