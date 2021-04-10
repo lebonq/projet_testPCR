@@ -44,11 +44,13 @@ int** pipeInterArchiveAcquisiton;
 int** pipeAcquisitionInterArchive;
 
 int main(int argc,char** argv){
-
-    if(argc < 2){
-        printf("Le programme s'utilise avec 1 arguments, ./Acquisiton configFile nbAcquisiton tailleBuffer\n");
+    
+    if(argc < 4){
+        printf("Le programme s'utilise avec 1 arguments, ./InterArchive configFile nbAcquisiton tailleBuffer\n");
         exit(0);
     }
+
+    printf("Demarrage du reseau");
 
     char* fileConfig = argv[1];
     nbServerAcquisition = atoi(argv[2]);
@@ -106,6 +108,10 @@ int main(int argc,char** argv){
         descripteursTermimal[i][1] = pipeInterArchiveAcquisiton[i][1];//Descripteur de fichier pour ecrire les reponses 
         pthread_create(&threadAcquisition[i],NULL,threadInter,descripteursTermimal[i]);//todo
         i++;
+    }
+
+    for (int i = 0; i < nbServerAcquisition; i++){
+        pthread_join(threadAcquisition[i],NULL);
     }
     
 }
