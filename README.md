@@ -25,7 +25,9 @@ La commande *make cleanall* peut être utilisée pour nettoyer complètement le 
 Pour avoir une application fonctionnelle vous aurez besoin d'un minimum de 2 fichiers :  
 
 - configFile.txt
-- Un fichier de résultats par centre d'archivage
+- Un fichier de résultats par centre d'archivage  
+
+Par défaut, le dépôt github contient tous ces fichiers déjà configurés.
 
 ### 1.4.1. configFile.txt
 
