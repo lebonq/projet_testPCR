@@ -121,7 +121,6 @@ void* threadInter(void* fd){//todo
     char nTest[255],type[255],valeur[255];
     bufferReader = litLigne(fdLecteur);//On lit la premiere ligne pour lancer la boucle
     while( bufferReader != NULL){
-        printf("%s",bufferReader);
         if(decoupe(bufferReader,nTest,type,valeur) == 0){
             printf("ERROR DECOUPE\n");
             exit(0);

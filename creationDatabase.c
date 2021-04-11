@@ -37,7 +37,7 @@ int main(int argc, char **argv){
         aleainit();
         nbTest += i;//*alea(1,150);
 
-        long int timeTest = tv.tv_sec - alea(14400,345600); //Ici on retire entre 4 et 96 heures a l'heures actuelle pour simuler un prelevement qui a ete fait entre 4 et 96 avant le vol
+        long int timeTest = tv.tv_sec - alea(14400,172800); //Ici on retire entre 4 et 48 heures a l'heures actuelle pour simuler un prelevement qui a ete fait entre 4 et 96 avant le vol
 
         int resultatTest = alea(0,100);
 
