@@ -27,7 +27,7 @@ Pour avoir une application fonctionnelle vous aurez besoin d'un minimum de 2 fic
 - configFile.txt
 - Un fichier de résultats par centre d'archivage  
 
-Par défaut, le dépôt github contient tous ces fichiers déjà configurés.
+Par défaut, le dépôt github contient tous ces fichiers déjà configurés pour 2 centres d'archivage.
 
 ### 1.4.1. configFile.txt
 
