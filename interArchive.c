@@ -112,7 +112,7 @@ int main(int argc,char** argv){
     for ( i = 0; i < nbServerAcquisition; i++){
         pthread_join(threadAcquisition[i],NULL);
     }
-    
+    return 0;
 }
 
 void* threadInter(void* fd){//todo

@@ -54,6 +54,8 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
         //Permet de vider le buffer d'entree
         fgets(num,BUFSIZ+1,stdin); //Sale mais ca fonctionne
     }
+
+    return 0;
 }
 
 /**
