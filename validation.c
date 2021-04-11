@@ -78,7 +78,7 @@ int validerTest(char *numTest, char* tempsValiditeTest, char* nomFichier){
             struct timeval tv;
             gettimeofday(&tv,NULL);//On recupere la date du jour en seconde ecoulee depuis 1970
 
-            if(atoi(datePrelevementFile) + atoi(tempsValiditeTest) <= tv.tv_sec){
+            if(atoi(datePrelevementFile) + atoi(tempsValiditeTest) >= tv.tv_sec){
                 fclose(fichier);
                 return atoi(resultatFile);
             }

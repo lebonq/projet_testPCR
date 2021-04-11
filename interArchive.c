@@ -80,6 +80,7 @@ int main(int argc,char** argv){
     char nomFilePcr[255], nbTerminaux[255], idCentre[255];
     int i = 0;
     FILE* config = fopen(fileConfig,"r");
+
     while(fscanf(config,"%s %s %s",nomFilePcr,idCentre,nbTerminaux) != EOF){//on lit le fichier de config
         pipeAcquisitionInterArchive[i] = (int*)malloc(sizeof(int)*(2));
         pipeInterArchiveAcquisiton[i] = (int*)malloc(sizeof(int)*(2));
@@ -87,7 +88,7 @@ int main(int argc,char** argv){
         pipe(pipeAcquisitionInterArchive[i]);
         pipe(pipeInterArchiveAcquisiton[i]);
 
-        idCentres[i] = idCentre;
+        strcpy(idCentres[i],idCentre);//on utilise strcpy pour ne pas ecrase le pointeur
 
         pid_t Acqusition = fork();
         if(Acqusition == 0){
@@ -98,7 +99,7 @@ int main(int argc,char** argv){
             char* nbMaxBufferDemandeChar = argv[3];
             char nomCentre[512];
             sprintf(nomCentre,"Centre %s",idCentre);
-            execlp("/usr/bin/xterm", "xterm", "-e", "./Acquisition", nbMaxBufferDemandeChar, idCentres, nomFilePcr, nbTerminaux, fd1 , fd2 , NULL);
+            execlp("/usr/bin/xterm", "xterm", "-e", "./Acquisition", nbMaxBufferDemandeChar, nomCentre, idCentre, nomFilePcr, nbTerminaux, fd1 , fd2 , NULL);
         }
         int** descripteursTermimal = (int**)malloc(sizeof(int*) * (nbServerAcquisition));//On fait un tableau qui contiendra les 4 descripteurs pour chacun de nos trheads
         descripteursTermimal[i] = (int*)malloc(sizeof(int)*4);
@@ -117,13 +118,16 @@ int main(int argc,char** argv){
 void* threadInter(void* fd){//todo
     int fdLecteur   =    ((int*)fd)[0];
     int fdEcrivain  =    ((int*)fd)[1];
-
     char* bufferReader =  malloc(TAILLEBUF-1);
     char nTest[255],type[255],valeur[255];
     bufferReader = litLigne(fdLecteur);//On lit la premiere ligne pour lancer la boucle
     while( bufferReader != NULL){
-        decoupe(bufferReader,nTest,type,valeur);
-        if(strcmp(type,"Demande")){//on regarde si le message recu est une reponse ou une demande
+        printf("%s",bufferReader);
+        if(decoupe(bufferReader,nTest,type,valeur) == 0){
+            printf("ERROR DECOUPE\n");
+            exit(0);
+        }
+        if(!strcmp(type,"Demande")){//on regarde si le message recu est une reponse ou une demande
             sem_wait(&nbCaseLibre);
             sem_wait(&semState);//Permet de ne pas ecrire dans la memoire quand elle est lu
 
@@ -136,32 +140,34 @@ void* threadInter(void* fd){//todo
                     strcpy(bufferDemande[i],nTest);//on met le test dans le tableau on utilise STRCPY pour ne pas ecraser le pointeur
                     bufferDescripteur[i] = fdEcrivain;//On met le fd correspondant
                     for(int j = 0; j < nbServerAcquisition; j++){
-                        if(strcmp(idCentres[j],demandeId)){//On transfert au bon serveur acquisition
+                        if(!strcmp(idCentres[j],demandeId)){//On transfert au bon serveur acquisition
                             printf("Transfert au bon serveur acquisition\n");
                             ecritLigne(pipeInterArchiveAcquisiton[j][1],bufferReader);//on donne le tuyaux corrspond au centre de l'id de la demande
+                            printf("En renvoie la demande %s",bufferReader);
                         }
                     }
+                    break;
                 }
             }
 
             sem_post(&semState);
         }
         else{//ici reponse donc on transmet le message au terminal
-
             for (int i = 0; i < nbMaxBufferDemande; i++){//On check toute les demandes
                 sem_wait(&semState);//on rentre en section critique
                 if(state[i] == 1 && !strcmp(bufferDemande[i],nTest)){//Si la case est pleine on verifi et si le test corespond
                     state[i] = 0;//On libere la case i
                     sem_post(&nbCaseLibre);//On libere une case dans notre semaphore
                     ecritLigne(bufferDescripteur[i],bufferReader);//On ecrit la ligne dans le descipteur correspondant
+                    printf("En renvoie la reponse %s",bufferReader);
                 }
                 sem_post(&semState);
             }
         }
-
         bufferReader = litLigne(fdLecteur);
     }
 
+    printf("Fin thread interarchive");
     pthread_exit(NULL);
 }
 

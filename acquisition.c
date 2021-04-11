@@ -63,6 +63,8 @@ int main(int argc, char** argv){
     pipeInterArchiveAcquisiton = atoi(argv[6]);//pour les lire ce que interarchive nous envoye
     pipeAcquisitonInterArchive = atoi(argv[7]);//Pour ecrire
 
+    printf("%s\n",nomCentre);
+
     if(strlen(idCentre) ==3){//Si il est different de 4 chars ce n;est pas bon !
         printf("Id centre invalide\n");
         exit(0);
@@ -83,9 +85,6 @@ int main(int argc, char** argv){
     pipeTerminalAcquisiton = (int**)malloc(sizeof(int*)*(nbTerminal));
     pipeAcquisitionTerminal = (int**)malloc(sizeof(int*)*(nbTerminal));
  
-    pipe(pipeValidationAcquisition);
-    pipe(pipeAcquisitonValidation);
-
     for (int i = 0; i < nbTerminal; i++){
         pipeTerminalAcquisiton[i] = (int*)malloc(sizeof(int)*(2));
         pipeAcquisitionTerminal[i] = (int*)malloc(sizeof(int)*(2));
@@ -98,9 +97,12 @@ int main(int argc, char** argv){
             char fd2[16];
             sprintf(fd1,"%d",pipeAcquisitionTerminal[i][0]);
             sprintf(fd2,"%d",pipeTerminalAcquisiton[i][1]);
-            execlp("/usr/bin/xterm", "xterm", "-e", "./Terminal", fd1, fd2, NULL);
+            execlp("/usr/bin/xterm", "xterm", "-e", "./Terminal", fd1, fd2, nomCentre, NULL);
         }
     }
+
+    pipe(pipeValidationAcquisition);
+    pipe(pipeAcquisitonValidation);
 
     pid_t validation = fork();
     if(validation == 0){
@@ -164,7 +166,10 @@ void *lireRequeteTerminal(void* fdTermimal){
         sem_wait(&semState);//Permet de ne pas ecrire dans la memoire quand elle est lu
         if(state[i] == 0){
             state[i] = 1;//On met la case a 1 car elle va etre utilise
-            decoupe(c,nTest,type,valeur);
+            if(0 == decoupe(c,nTest,type,valeur)){
+                printf("ERROR DECOUPE\n");
+                exit(0);//si erreur decoupe on coupe ke programme en le notifiant
+            }
 
             strcpy(bufferDemande[i],nTest);//on met le test dans le tableau on utilise STRCPY pour ne pas ecraser le pointeur
             bufferDescripteur[i] = fdEcrivain;//On met le fd correspondant
@@ -224,8 +229,12 @@ void *threadInterArchive(void* unUse){
     char nTest[255],type[255],valeur[255];
     bufferReader = litLigne(pipeInterArchiveAcquisiton);//On lit la premiere ligne pour lancer la boucle
     while( bufferReader != NULL){
-        decoupe(bufferReader,nTest,type,valeur);
-        if(strcmp(type,"Demande")){//on regarde si le message recu est une reponse ou une demande
+        printf("%s\n",bufferReader);
+        if( 0 == decoupe(bufferReader,nTest,type,valeur)){
+            printf("ERROR DECOUPE\n");
+            exit(0);
+        }
+        if(!strcmp(type,"Demande")){//on regarde si le message recu est une reponse ou une demande
             sem_wait(&nbCaseLibre);
             sem_wait(&semState);//Permet de ne pas ecrire dans la memoire quand elle est lu
 
@@ -234,8 +243,9 @@ void *threadInterArchive(void* unUse){
                     state[i] = 1;
                     strcpy(bufferDemande[i],nTest);//on met le test dans le tableau on utilise STRCPY pour ne pas ecraser le pointeur
                     bufferDescripteur[i] = pipeAcquisitonInterArchive;//On met le fd correspondant
-                    printf("Transfert a validation\n");
+                    printf("Transfert a depuis acquisiton thread validation\n");
                     ecritLigne(pipeAcquisitonValidation[1],bufferReader);
+                    break;
                 }
             }
 
@@ -248,6 +258,7 @@ void *threadInterArchive(void* unUse){
                 if(state[i] == 1 && !strcmp(bufferDemande[i],nTest)){//Si la case est pleine on verifi et si le test corespond
                     state[i] = 0;//On libere la case i
                     sem_post(&nbCaseLibre);//On libere une case dans notre semaphore
+                    printf("Envoye reponse interarchve a termina\n");
                     ecritLigne(bufferDescripteur[i],bufferReader);//On ecrit la ligne dans le descipteur correspondant
                 }
                 sem_post(&semState);

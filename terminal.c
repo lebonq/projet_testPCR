@@ -28,8 +28,8 @@
  */
 int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des réponses et argv[2] c'est ou l'on ecrit les requêtes
     
-    if(argc < 3){
-        printf("Il manque un descripteur de fichier\n");
+    if(argc < 4){
+        printf("Il manque un descripteur de fichier ou le nom du terminal usitlisation : ./Terminal fdLecteur fdEcrivain Nomcentre\n");
         exit(0);
     }
     
@@ -37,7 +37,9 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
 
     int argv1 = atoi(argv[1]);//Lecture
     int argv2 = atoi(argv[2]);//Ecriture
+    char* nomCentre = argv[3];
 
+    printf("%s\n",nomCentre);
     char *num = malloc(TAILLEBUF+1);
 
     while(1){
@@ -67,7 +69,7 @@ int validerTest(char *numeroTest, int fdEnvoye, int fdRecois){
     char valeur[255];
 
     aleainit();
-    sprintf(valeur,"%d",alea(1,50000));
+    sprintf(valeur,"%d",alea(50000,390600));
 
     int err = envoyerMessage(numeroTest, valeur, fdEnvoye);
     
