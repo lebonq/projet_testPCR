@@ -46,3 +46,4 @@ Et un fichier resultats_centre_0012.txt sera créé. Avec un taux de 8% de test 
 
 Une fois votre fichier configFile.txt complété, pour avoir le programme fonctionnel il faut exécuter **InterArchive**. Il faut spécifier le nom du fichier de configuration, le nombre de centres décrit dans ce fichier ainsi que la taille du buffer. Si je veux exécuter mon application avec le fichier configuration.txt qui contient 4 centre d'archivage et pour lequel je veux un buffer de 50 requêtes je fais :  
 *./InterArchive configuration.txt 4 50*
+Pour utiliser un terminal il suffit juste de taper le numéro du test que l'on shouaite valider.
