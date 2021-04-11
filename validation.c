@@ -30,7 +30,7 @@ int main(int argc, char **argv){
     int argv2 = atoi(argv[2]); //Ecriture
     char* nomFichier = argv[3]; //Nom du ficher avec les resulatst
 
-    char *demande = malloc(TAILLEBUF+1);
+    char *demande = malloc(TAILLEBUF+1);//buffer ou on enregistre la demande
 
     while(1){
         char nmTest[255], typeMsg[255], valeur[255]; //ici 255 est une valeur arbitraire
@@ -65,7 +65,7 @@ int main(int argc, char **argv){
  */
 int validerTest(char *numTest, char* tempsValiditeTest, char* nomFichier){
 
-    FILE* fichier = fopen(nomFichier, "r");
+    FILE* fichier = fopen(nomFichier, "r");//on ouvre le fichier avec les resultats on utilise fopen car par la suite on utilseras fscanf
 
     char* numerosTestFile = malloc(TAILLEBUF+1);
     char* datePrelevementFile = malloc(TAILLEBUF+1);
@@ -78,16 +78,26 @@ int validerTest(char *numTest, char* tempsValiditeTest, char* nomFichier){
             struct timeval tv;
             gettimeofday(&tv,NULL);//On recupere la date du jour en seconde ecoulee depuis 1970
 
-            if(atoi(datePrelevementFile) + atoi(tempsValiditeTest) >= tv.tv_sec){
+            if(atoi(datePrelevementFile) + atoi(tempsValiditeTest) >= tv.tv_sec){//Si la date de prelevement + le temps de validiter du test sont supérieur au temps actuel alors le test est "valide"
                 fclose(fichier);
-                return atoi(resultatFile);
+                free(numerosTestFile);//on libere la mémoire
+                free(datePrelevementFile);
+                free(resultatFile);
+                return atoi(resultatFile);//on renvoie le resultat du prelevement
             }
             else{
                 fclose(fichier);
+                free(numerosTestFile);//on libere la mémoire
+                free(datePrelevementFile);
+                free(resultatFile);
                 return 1;
             }
         }
     }
+
+    free(numerosTestFile);//on libere la mémoire
+    free(datePrelevementFile);
+    free(resultatFile);
 
     fclose(fichier);
     return 1;

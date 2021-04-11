@@ -60,7 +60,7 @@ int main(int argc,char** argv){
     state = calloc(nbMaxBufferDemande,sizeof(int));
     idCentres = (char**)malloc(sizeof(char*)*nbServerAcquisition);
 
-    sem_init(&semState,0,1);//ini
+    sem_init(&semState,0,1);//initialisation des
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
 
     for (int i = 0; i < nbMaxBufferDemande; i++){//On met un malloc dans chaque cases de notre buffer pour stocker nos code
@@ -145,7 +145,7 @@ void* threadInter(void* fd){//todo
                             printf("En renvoie la demande %s",bufferReader);
                         }
                     }
-                    break;
+                    break;//on arrete ka boucle car l'action voulu est faite
                 }
             }
 

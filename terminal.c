@@ -144,8 +144,8 @@ int recevoirMessage(int fd, char** msg){
  * @return int 
  */
 int affichageResultat(char* msg){
-    char nmTest[255], typeMsg[255], valeur[255]; //ici 255 est une valeur arbitraire
-    int err = decoupe(msg,nmTest,typeMsg,valeur);
+    char nmTest[255], typeMsg[255], valeur[255]; 
+    int err = decoupe(msg,nmTest,typeMsg,valeur);//on decoupe le message
 
     if(err == 0){
         return err;
