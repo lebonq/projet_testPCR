@@ -38,13 +38,10 @@ sem_t nbCaseLibre;//Permet de savoir si il y a de la place dans le buffer
 char* idCentre;//Pas besoin de semaphore car elle est en read-only
 int nbMaxBufferDemande;//Pas besoin de semaphore car elle est en read-only
 
-//les tableaux qui contiendrons nos pipes
-int** pipeTerminalAcquisiton;
-int** pipeAcquisitionTerminal;
-
+//Pipe pour communiquer avec interarchive
+//pipe pour communiquer avec validation
 int pipeValidationAcquisition[2];
 int pipeAcquisitonValidation[2];
-
 int pipeInterArchiveAcquisiton;//lecture
 int pipeAcquisitonInterArchive;//Ecriture
 
@@ -72,17 +69,17 @@ int main(int argc, char** argv){
 
     bufferDemande = (char**)malloc(sizeof(char*)*(nbMaxBufferDemande));
     bufferDescripteur = malloc(sizeof(int)*(nbMaxBufferDemande));
-    state = malloc(sizeof(int)*(nbMaxBufferDemande));
+    state = calloc(nbMaxBufferDemande,sizeof(int));
 
     for (int i = 0; i < nbMaxBufferDemande; i++){//On met un malloc dans chaque cases de notre buffer pour stocker nos code
         bufferDemande[i] = (char*)malloc(sizeof(char)*16);//16 chars suffisent car le test fait 16 caraceteres
     }
 
-    for (int i = 0; i < nbMaxBufferDemande; i++){//On initialise state a 0
-        state[i] = 0;
-    }
+    //nos 2 tableau de pipe pour les terminaux
+    int** pipeTerminalAcquisiton;
+    int** pipeAcquisitionTerminal;
 
-    pipeTerminalAcquisiton = (int**)malloc(sizeof(int*)*(nbTerminal));
+    pipeTerminalAcquisiton = (int**)malloc(sizeof(int*)*(nbTerminal));//on prepapre notre tableau pour nos tuyaux
     pipeAcquisitionTerminal = (int**)malloc(sizeof(int*)*(nbTerminal));
  
     for (int i = 0; i < nbTerminal; i++){
@@ -95,9 +92,9 @@ int main(int argc, char** argv){
         if(terminal == 0){
             char fd1[16];
             char fd2[16];
-            sprintf(fd1,"%d",pipeAcquisitionTerminal[i][0]);
+            sprintf(fd1,"%d",pipeAcquisitionTerminal[i][0]);//on converti les descripteur de fichier en char*
             sprintf(fd2,"%d",pipeTerminalAcquisiton[i][1]);
-            execlp("/usr/bin/xterm", "xterm", "-e", "./Terminal", fd1, fd2, nomCentre, NULL);
+            execlp("/usr/bin/xterm", "xterm", "-e", "./Terminal", fd1, fd2, nomCentre, NULL);//on recouvre les process fils par des terminaux xterm
         }
     }
 
@@ -108,9 +105,9 @@ int main(int argc, char** argv){
     if(validation == 0){
         char fd1[16];
         char fd2[16];
-        sprintf(fd1,"%d",pipeAcquisitonValidation[0]);
+        sprintf(fd1,"%d",pipeAcquisitonValidation[0]);//on converti les descripteur de fichier en char*
         sprintf(fd2,"%d",pipeValidationAcquisition[1]);
-        execlp("./Validation", "Validation", fd1, fd2, nomFichierPcr, NULL);
+        execlp("./Validation", "Validation", fd1, fd2, nomFichierPcr, NULL);//on recouvre le process par un 
         printf("Jamais Print\n");
         exit(0);
     }
@@ -134,14 +131,14 @@ int main(int argc, char** argv){
         descripteursTermimal[i][2] = pipeAcquisitonValidation[1];//Le tube de validation
         descripteursTermimal[i][3]  = pipeAcquisitonInterArchive;//Le tube du serveur inter
 
-        pthread_create(&threadTerminal[i],NULL,lireRequeteTerminal,descripteursTermimal[i]);
+        pthread_create(&threadTerminal[i],NULL,lireRequeteTerminal,descripteursTermimal[i]);//on cree notre thread qui gerera terminal
     }
     
     pthread_create(&threadValider,NULL,threadValidation,&fdValiderListerner);
     pthread_create(&threadInter,NULL,threadInterArchive,&fdInterListener);
 
     for (int i = 0; i < nbTerminal; i++){
-        pthread_join(threadTerminal[i],NULL);
+        pthread_join(threadTerminal[i],NULL);//permet d'attendre la fin de tout les threads
     }
 
     pthread_join(threadValider,NULL);

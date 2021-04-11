@@ -57,15 +57,14 @@ int main(int argc,char** argv){
 
     bufferDemande = (char**)malloc(sizeof(char*)*(nbMaxBufferDemande));
     bufferDescripteur = malloc(sizeof(int)*(nbMaxBufferDemande));
-    state = malloc(sizeof(int)*(nbMaxBufferDemande));
+    state = calloc(nbMaxBufferDemande,sizeof(int));
     idCentres = (char**)malloc(sizeof(char*)*nbServerAcquisition);
 
-    sem_init(&semState,0,1);
+    sem_init(&semState,0,1);//ini
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
 
     for (int i = 0; i < nbMaxBufferDemande; i++){//On met un malloc dans chaque cases de notre buffer pour stocker nos code
         bufferDemande[i] = (char*)malloc(sizeof(char)*16);//16 chars suffisent car le test fait 16 caraceteres
-        state[i] = 0;//On initialise state a 0
     }
 
     for (int i = 0; i < nbServerAcquisition; i++){
@@ -79,7 +78,7 @@ int main(int argc,char** argv){
 
     char nomFilePcr[255], nbTerminaux[255], idCentre[255];
     int i = 0;
-    FILE* config = fopen(fileConfig,"r");
+    FILE* config = fopen(fileConfig,"r");//on ouvre le fichier de config avec fopen pour pouvoir utiliser fscanf et enregistrer nos valeur dans 3 buffer distint
 
     while(fscanf(config,"%s %s %s",nomFilePcr,idCentre,nbTerminaux) != EOF){//on lit le fichier de config
         pipeAcquisitionInterArchive[i] = (int*)malloc(sizeof(int)*(2));

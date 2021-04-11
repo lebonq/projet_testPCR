@@ -19,6 +19,8 @@
 #include <string.h>
 #include <unistd.h>
 
+char* nomCentre; //pour avoir accés au noms du centre partout
+
 /**
  * @brief Methode principal du programme
  * 
@@ -37,7 +39,7 @@ int main(int argc, char **argv){// argv[1] descripteur de fichier de lecture des
 
     int argv1 = atoi(argv[1]);//Lecture
     int argv2 = atoi(argv[2]);//Ecriture
-    char* nomCentre = argv[3];
+    nomCentre = argv[3];
 
     printf("%s\n",nomCentre);
     char *num = malloc(TAILLEBUF+1);
@@ -162,24 +164,20 @@ int affichageResultat(char* msg){
 }
 
 /**
- * @brief Permet de faire les logs de la session du terminal
+ * @brief Permet de faire les logs de tout les terminaux d'un centre
  * 
  * @param msg 
  */
 void enregistrerResultat(char* msg){
-
     FILE* fichier = NULL;
     char nomFichier[255];
-    sprintf(nomFichier,"log_terminal_%d.txt", getpid());
-    fichier = fopen(nomFichier, "a");
-
-    if (fichier != NULL)
-    {
-        fprintf(fichier, msg);
+    sprintf(nomFichier,"log_terminal_%s.txt", nomCentre);
+    fichier = fopen(nomFichier, "a");//En mode a pour ajouter la ligne a la fin du fichier
+    if (fichier != NULL){
+        fprintf(fichier , msg);
         fclose(fichier);
     }
-    else
-    {
-        printf("Impossible d'ouvrir le fichier");
+    else{
+        printf("Impossible d'ouvrir le fichier de log");
     }
 }
