@@ -60,7 +60,7 @@ int main(int argc,char** argv){
     state = calloc(nbMaxBufferDemande,sizeof(int));
     idCentres = (char**)malloc(sizeof(char*)*nbServerAcquisition);
 
-    sem_init(&semState,0,1);//initialisation des
+    sem_init(&semState,0,1);//initialisation des semaphores
     sem_init(&nbCaseLibre,0,nbMaxBufferDemande);
 
     for (int i = 0; i < nbMaxBufferDemande; i++){//On met un malloc dans chaque cases de notre buffer pour stocker nos code
@@ -90,7 +90,7 @@ int main(int argc,char** argv){
         strcpy(idCentres[i],idCentre);//on utilise strcpy pour ne pas ecrase le pointeur
 
         pid_t Acqusition = fork();
-        if(Acqusition == 0){
+        if(Acqusition == 0){//on cree notre process ascquisiton dans le process fils
             char fd1[16];
             char fd2[16];
             sprintf(fd1,"%d",pipeInterArchiveAcquisiton[i][0]);
@@ -114,14 +114,19 @@ int main(int argc,char** argv){
     return 0;
 }
 
-void* threadInter(void* fd){//todo
+/**
+ * @brief Le thread qui traite les demande et les reponses envoyer a inter archive
+ * 
+ * @param fd 
+ * @return void* 
+ */
+void* threadInter(void* fd){
     int fdLecteur   =    ((int*)fd)[0];
     int fdEcrivain  =    ((int*)fd)[1];
     char* bufferReader =  malloc(TAILLEBUF-1);
     char nTest[255],type[255],valeur[255];
     bufferReader = litLigne(fdLecteur);//On lit la premiere ligne pour lancer la boucle
-    while( bufferReader != NULL){
-        printf("%s",bufferReader);
+    while( bufferReader != NULL){//La boucle s'effectue tant que le buffer de lecture n'est pas vide
         if(decoupe(bufferReader,nTest,type,valeur) == 0){
             printf("ERROR DECOUPE\n");
             exit(0);
