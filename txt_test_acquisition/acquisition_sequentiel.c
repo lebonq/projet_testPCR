@@ -49,8 +49,8 @@ int main(int argc, char** argv){
         state[i] = 0;
     }
 
-    int fdValider = open("txt_test_acquisition/validation1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
-    int fdInter = open("txt_test_acquisition/inter1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
+    int fdValider = open("validation1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
+    int fdInter = open("inter1_reponse.txt",O_RDONLY);//Descripteur de fichier pour lire les "reponses"
     printf("Terminal\n");
     lireRequeteTerminal(bufferDemande,bufferDescripteur,state,nbMaxBufferDemande,idCentre);
     printf("Valider\n");
@@ -72,10 +72,10 @@ int main(int argc, char** argv){
  * @return int 
  */
 int lireRequeteTerminal(char** bufferDemande, int* bufferDescripteur, int* state, int nbDemande,char* idCentre){
-    int fdLecteur = open("txt_test_acquisition/terminal1_demande.txt",O_RDONLY);//Descripteur de fichier pour lire les demandes
-    int fdEcrivain = open("txt_test_acquisition/terminal1_reponse.txt",O_WRONLY);//Descripteur de fichier pour ecrire les reponses
-    int fdValider = open("txt_test_acquisition/validation1_demande.txt",O_WRONLY);//Le tube de validation
-    int fdInter = open("txt_test_acquisition/inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
+    int fdLecteur = open("terminal1_demande.txt",O_RDONLY);//Descripteur de fichier pour lire les demandes
+    int fdEcrivain = open("terminal1_reponse.txt",O_WRONLY);//Descripteur de fichier pour ecrire les reponses
+    int fdValider = open("validation1_demande.txt",O_WRONLY);//Le tube de validation
+    int fdInter = open("inter1_demande.txt",O_WRONLY);//Le tube du serveur inter
 
     char* c =  litLigne(fdLecteur);
     int i = 0;
