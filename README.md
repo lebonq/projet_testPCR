@@ -40,7 +40,7 @@ resultats_centre_0028.txt 0028 12
 
 Un fichier de résultat est très simple a generation. Il suffit d'exécuter **CreationDatabase** en spécifiant l'id du centre et le nombre de tests voulus.  Si je veux générer un fichier avec 50 tests pour le centre 0012 je fais :  
 *./CreationDatabase 0012 50*  
-Et un fichier resultats_centre_0012.txt sera créé. Avec un taux de 8% de test positif et en moyenne un test fait entre 4 et 48 heures avant le vol.  
+Et un fichier resultats_centre_0012.txt sera créé. Avec un taux de 7% de test positif et en moyenne un test fait entre 4 et 48 heures avant le vol.  
 
 ## 1.5. Exécuter l'application
 
